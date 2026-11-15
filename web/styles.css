@@ -1,0 +1,1338 @@
+/*
+ * Skyface Space Tracker: styles.
+ *
+ * The look is a blueprint, not a starfield. Astronomers measured the sky on glass plates
+ * and wrote their findings by hand in a logbook, so:
+ *   - the page is Prussian blue, the colour of cyanotype blueprints;
+ *   - the observer's log sits on drafting-grid paper;
+ *   - one accent, international orange (the colour of NASA flight suits), marks the main
+ *     action and the object being tracked. Nothing else is orange.
+ *
+ * Contents: 1 settings and typeface, 2 base text, 3 page frame, 4 form controls,
+ * 5 messages, 6 panels and tables, 7 identity card and logbook, 8 tracker, 9 result tabs,
+ * 10 sky map, 11 welcome screen.
+ */
+
+/* ---------- 1. Settings and typeface ---------- */
+
+/* Atkinson Hyperlegible Next (SIL Open Font License) is bundled, so the page looks the same
+   offline. It is split into two files; the browser fetches the second only for accented text. */
+@font-face {
+  font-family: "Atkinson Hyperlegible Next";
+  src: url("/assets/fonts/atkinson-hyperlegible-next-latin-wght-normal.woff2") format("woff2");
+  font-weight: 200 800;
+  font-style: normal;
+  font-display: swap;
+  unicode-range:
+    U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329,
+    U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: "Atkinson Hyperlegible Next";
+  src: url("/assets/fonts/atkinson-hyperlegible-next-latin-ext-wght-normal.woff2") format("woff2");
+  font-weight: 200 800;
+  font-style: normal;
+  font-display: swap;
+  unicode-range:
+    U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+1D00-1DBF, U+1E00-1E9F,
+    U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
+@font-face {
+  font-family: "Atkinson Hyperlegible Next";
+  src: url("/assets/fonts/atkinson-hyperlegible-next-latin-wght-italic.woff2") format("woff2");
+  font-weight: 200 800;
+  font-style: italic;
+  font-display: swap;
+  unicode-range:
+    U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329,
+    U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: "Atkinson Hyperlegible Next";
+  src: url("/assets/fonts/atkinson-hyperlegible-next-latin-ext-wght-italic.woff2") format("woff2");
+  font-weight: 200 800;
+  font-style: italic;
+  font-display: swap;
+  unicode-range:
+    U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+1D00-1DBF, U+1E00-1E9F,
+    U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
+:root {
+  color-scheme: dark;
+
+  /* Colours. Keep in step with COLOR in app.js. */
+  --page: #0b1d33; /* Prussian blue */
+  --panel: #112a47;
+  --inset: #0c2138; /* areas set into a panel */
+  --field: #081828;
+  --line: #24446b; /* blueprint line, for dividers and panel edges */
+  --control-line: #7393bb; /* edges of boxes and buttons: 3:1 against the page */
+  --text: #edf3fa;
+  --muted: #a6bad1;
+  --orange: #ff6b35; /* international orange */
+  --link: #a8d8ff;
+  --red: #ff9a9a;
+  --green: #9be3b4;
+  --amber: #ffe1a3;
+
+  /* Type: one typeface throughout, designed so similar letters and digits are easy to tell apart. */
+  --font-text: "Atkinson Hyperlegible Next", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --size-small: 0.875rem;
+  --size-tiny: 0.8125rem;
+
+  /* Spacing and shape */
+  --gap: 16px;
+  --radius: 10px;
+  --radius-small: 6px;
+  --page-width: 1280px;
+}
+
+/* ---------- 2. Base text ---------- */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+[hidden] {
+  display: none !important;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--page);
+  color: var(--text);
+  font: 400 1rem/1.5 var(--font-text);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  margin: 0;
+  line-height: 1.25;
+  text-wrap: balance;
+}
+
+h1 {
+  font-size: 1.375rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+h2 {
+  margin-bottom: 12px;
+  font-size: 1.125rem;
+  font-weight: 650;
+}
+
+h3 {
+  margin: 24px 0 8px;
+  font-size: 1rem;
+  font-weight: 650;
+}
+
+h3:first-child {
+  margin-top: 0;
+}
+
+p {
+  margin: 8px 0;
+  max-width: 72ch;
+  text-wrap: pretty;
+}
+
+a {
+  color: var(--link);
+  text-underline-offset: 0.18em;
+}
+
+a:hover {
+  color: #fff;
+}
+
+.note {
+  color: var(--muted);
+  font-size: var(--size-small);
+}
+
+/* A small heading above a group of controls or facts. */
+.eyebrow {
+  margin: 0 0 8px;
+  color: var(--muted);
+  font-size: var(--size-tiny);
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+/* Text for screen readers only. */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* "Skip to the tracker" appears only when reached with the Tab key. */
+.skip-link {
+  position: absolute;
+  top: -60px;
+  left: 12px;
+  z-index: 60;
+  padding: 10px 16px;
+  border-radius: var(--radius-small);
+  background: var(--text);
+  color: var(--page);
+  font-weight: 600;
+}
+
+.skip-link:focus {
+  top: 12px;
+}
+
+main:focus {
+  outline: none;
+}
+
+/* ---------- 3. Page frame ---------- */
+
+.top,
+.layout,
+.mapview,
+footer {
+  max-width: var(--page-width);
+  margin: 0 auto;
+  padding-left: 24px;
+  padding-right: 24px;
+}
+
+.top {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px var(--gap);
+  padding-top: 18px;
+  padding-bottom: 18px;
+}
+
+/* The logo and name. It is a button: pressing it returns to the start screen. */
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 0;
+  padding: 4px 8px 4px 4px;
+  border: 0;
+  background: none;
+  text-align: left;
+}
+
+.brand img {
+  flex: none;
+  display: block;
+}
+
+.brand-name {
+  display: block;
+  font-size: 1.375rem;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+}
+
+.brand-tag {
+  display: block;
+  color: var(--muted);
+  font-size: var(--size-small);
+  font-weight: 400;
+}
+
+/* An input with its button on the same line. */
+.inline-field {
+  display: flex;
+  gap: 6px;
+}
+
+.inline-field input {
+  min-width: 0;
+}
+
+.inline-field button {
+  flex: none;
+}
+
+.copyright {
+  max-width: none;
+  margin: 0 0 12px;
+}
+
+.top p {
+  margin: 0;
+  color: var(--muted);
+  font-size: var(--size-small);
+}
+
+/* The two views, as one joined control. */
+.nav {
+  display: flex;
+  padding: 3px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--field);
+}
+
+.nav button {
+  padding: 6px 16px;
+  border: 0;
+  border-radius: 999px;
+  background: none;
+  color: var(--muted);
+}
+
+.nav button[aria-pressed="true"] {
+  background: var(--text);
+  color: var(--page);
+}
+
+/* Form on the left, results on the right; stacked on narrow screens. */
+.layout {
+  display: grid;
+  grid-template-columns: 300px minmax(0, 1fr);
+  gap: 20px;
+  align-items: start;
+  padding-bottom: 48px;
+}
+
+@media (min-width: 901px) {
+  .layout > .panel:first-child {
+    position: sticky;
+    top: 16px;
+    max-height: calc(100vh - 32px);
+    overflow-y: auto;
+  }
+}
+
+@media (max-width: 900px) {
+  .layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 560px) {
+  .top,
+  .layout,
+  .mapview,
+  footer {
+    padding-left: 14px;
+    padding-right: 14px;
+  }
+}
+
+footer {
+  padding-top: 8px;
+  padding-bottom: 32px;
+  color: var(--muted);
+  font-size: var(--size-small);
+}
+
+/* "Where the data comes from": a plain table anyone can read. */
+.about-data table {
+  margin: 10px 0;
+}
+
+.about-data td,
+.about-data th {
+  text-align: left;
+  vertical-align: top;
+}
+
+/* Embedded view (?embed=1) shows only the tool itself. */
+body.embed .top,
+body.embed #welcome,
+body.embed footer {
+  display: none !important;
+}
+
+body.embed .layout {
+  padding-top: 16px;
+}
+
+/* ---------- 4. Form controls ---------- */
+
+label {
+  display: block;
+  margin: 14px 0 4px;
+  font-size: var(--size-small);
+  font-weight: 600;
+}
+
+/* A checkbox or small input sitting on one line with its text. */
+.opt {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 6px 0;
+  font-weight: 400;
+}
+
+.opt input[type="checkbox"] {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  margin: 0;
+}
+
+input[type="text"],
+select {
+  width: 100%;
+  min-height: 38px;
+  padding: 7px 10px;
+  border: 1px solid var(--control-line);
+  border-radius: var(--radius-small);
+  background: var(--field);
+  color: var(--text);
+  font: inherit;
+  font-variant-numeric: tabular-nums;
+}
+
+input[type="text"]::placeholder {
+  color: #7f95af;
+}
+
+input.short {
+  width: 68px;
+}
+
+.opt select,
+.controls select,
+.transport select {
+  width: auto;
+}
+
+input[type="range"] {
+  width: 100%;
+  margin: 0;
+  accent-color: var(--orange);
+}
+
+input[type="checkbox"] {
+  accent-color: var(--orange);
+}
+
+button {
+  min-height: 38px;
+  padding: 7px 14px;
+  border: 1px solid var(--control-line);
+  border-radius: var(--radius-small);
+  background: var(--field);
+  color: var(--text);
+  font: inherit;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    border-color 0.12s,
+    background-color 0.12s;
+}
+
+button:hover:not(:disabled) {
+  border-color: var(--text);
+}
+
+button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+button.primary {
+  background: var(--orange);
+  border-color: var(--orange);
+  color: #1f0d04;
+}
+
+button.primary:hover:not(:disabled) {
+  background: #ff8256;
+  border-color: #ff8256;
+}
+
+button.wide {
+  width: 100%;
+  margin-top: 18px;
+}
+
+/* A quiet button that reads as a link (secondary actions). */
+button.quiet {
+  min-height: 0;
+  padding: 2px 4px;
+  border: 0;
+  background: none;
+  color: var(--link);
+  font-weight: 500;
+  text-decoration: underline;
+  text-underline-offset: 0.18em;
+}
+
+button[aria-pressed="true"] {
+  background: var(--text);
+  border-color: var(--text);
+  color: var(--page);
+}
+
+button:focus-visible,
+canvas:focus-visible,
+img[role="button"]:focus-visible,
+.scroll:focus-visible,
+input:focus-visible,
+select:focus-visible,
+summary:focus-visible,
+a:focus-visible {
+  outline: 2px solid var(--orange);
+  outline-offset: 2px;
+}
+
+/* Small rounded buttons: test objects, map layers. */
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.chips button {
+  min-height: 30px;
+  padding: 3px 12px;
+  border-color: var(--line);
+  border-radius: 999px;
+  background: var(--inset);
+  font-size: var(--size-small);
+  font-weight: 500;
+}
+
+/* A row of controls: button, slider, speed. */
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 14px;
+  margin: 12px 0;
+}
+
+.controls .opt {
+  margin: 0;
+}
+
+.controls input[type="range"] {
+  flex: 1;
+  min-width: 160px;
+}
+
+details {
+  margin: 12px 0;
+}
+
+summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.options {
+  margin: 18px 0 0;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+}
+
+/* ---------- 5. Messages ---------- */
+
+.err,
+.warn {
+  margin: 12px 0;
+  padding: 10px 14px;
+  border: 1px solid;
+  border-radius: var(--radius-small);
+  font-size: 0.9375rem;
+}
+
+.err {
+  color: var(--red);
+  background: #2a2238;
+  border-color: #6b3f55;
+}
+
+.warn {
+  color: var(--amber);
+  background: #1c2c46;
+  border-color: #5f6f8a;
+}
+
+.ok {
+  margin: 8px 0;
+  color: var(--green);
+  font-size: 0.9375rem;
+}
+
+.progress {
+  height: 6px;
+  margin: 10px 0 2px;
+  border-radius: 3px;
+  background: var(--field);
+  overflow: hidden;
+}
+
+.progress i {
+  display: block;
+  width: 0;
+  height: 100%;
+  background: var(--orange);
+  transition: width 0.3s;
+}
+
+/* ---------- 6. Panels and tables ---------- */
+
+.panel {
+  margin-bottom: var(--gap);
+  padding: 20px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--panel);
+}
+
+@media (max-width: 560px) {
+  .panel {
+    padding: 14px;
+  }
+}
+
+.empty {
+  padding: 56px 24px;
+  border-style: dashed;
+  background: none;
+  text-align: center;
+}
+
+.empty b {
+  font-size: 1.125rem;
+}
+
+.empty p {
+  margin: 6px auto 0;
+}
+
+.navrow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.spacer {
+  flex: 1;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--size-small);
+}
+
+th,
+td {
+  padding: 7px 10px;
+  border-bottom: 1px solid var(--line);
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+th {
+  position: sticky;
+  top: 0;
+  background: var(--panel);
+  color: var(--muted);
+  font-size: var(--size-tiny);
+  font-weight: 600;
+}
+
+td:first-child,
+th:first-child,
+td.left {
+  text-align: left;
+}
+
+.scroll {
+  max-height: 280px;
+  margin: 8px 0;
+  overflow: auto;
+}
+
+.scroll.tall {
+  max-height: 440px;
+}
+
+/* Small "number + caption" facts. */
+.metrics {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 12px 20px;
+  margin-bottom: 14px;
+}
+
+.metrics b {
+  display: block;
+  font-size: 1rem;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+}
+
+.metrics span {
+  color: var(--muted);
+  font-size: var(--size-tiny);
+}
+
+figure {
+  margin: 0;
+}
+
+figcaption {
+  margin-top: 6px;
+  color: var(--muted);
+  font-size: var(--size-tiny);
+}
+
+/* ---------- 7. Identity card and logbook ---------- */
+
+/* Who is at these coordinates: name, one line of context, then the key facts in a grid. */
+.object-name {
+  margin: 0 0 2px;
+  font-size: 1.625rem;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+}
+
+.facts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 12px 24px;
+  margin: 14px 0 0;
+}
+
+.facts dt {
+  color: var(--muted);
+  font-size: var(--size-tiny);
+}
+
+.facts dd {
+  margin: 0;
+  font-size: 0.9375rem;
+  font-variant-numeric: tabular-nums;
+}
+
+#idcard details {
+  margin: 14px 0 0;
+}
+
+#idcard summary {
+  color: var(--muted);
+  font-size: var(--size-small);
+  font-weight: 500;
+}
+
+/* The observer's log: a written entry on blueprint grid paper. This is the one place the
+   design is allowed to be loud. */
+.logbook {
+  margin: 0 0 var(--gap);
+  padding: 18px 22px;
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--orange);
+  border-radius: var(--radius);
+  background-color: var(--panel);
+  background-image:
+    linear-gradient(rgba(168, 216, 255, 0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(168, 216, 255, 0.06) 1px, transparent 1px);
+  background-size: 22px 22px;
+}
+
+.logbook h2 {
+  margin: 0;
+  color: var(--muted);
+  font-size: var(--size-tiny);
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.log-verdict {
+  margin: 4px 0 12px;
+  max-width: none;
+  font-size: clamp(1.25rem, 2.2vw, 1.5rem);
+  font-weight: 650;
+  line-height: 1.3;
+  text-wrap: balance;
+}
+
+.logbook dl {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  gap: 4px 16px;
+  margin: 0;
+}
+
+.logbook dt {
+  color: var(--muted);
+  font-size: var(--size-small);
+  line-height: 1.7;
+}
+
+.logbook dd {
+  margin: 0;
+  max-width: 80ch;
+  font-size: 0.9375rem;
+}
+
+@media (max-width: 560px) {
+  .logbook dl {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .logbook dd {
+    margin-bottom: 6px;
+  }
+}
+
+/* ---------- 8. Tracker ---------- */
+
+/* Image and transport on the left, display options beside it. */
+.tracker {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 250px;
+  gap: 24px;
+  align-items: start;
+}
+
+@media (max-width: 1080px) {
+  .tracker {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* The tracker canvas. Scoped by id: a bare canvas rule would also hit the sky map. */
+#cv {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-small);
+  background: #000;
+  cursor: crosshair;
+}
+
+/* Play, step, scrub, speed: one bar under the image. */
+.transport {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.transport input[type="range"] {
+  flex: 1;
+  min-width: 80px;
+}
+
+.transport #play {
+  min-width: 96px;
+}
+
+.transport .icon {
+  width: 38px;
+  padding: 0;
+  font-size: 1.125rem;
+  line-height: 1;
+}
+
+@media (max-width: 560px) {
+  .transport {
+    flex-wrap: wrap;
+  }
+
+  .transport input[type="range"] {
+    order: 5;
+    flex-basis: 100%;
+  }
+}
+
+.tracker-side fieldset {
+  margin: 0 0 18px;
+  padding: 0;
+  border: 0;
+}
+
+.tracker-side legend {
+  margin-bottom: 6px;
+  padding: 0;
+  color: var(--muted);
+  font-size: var(--size-tiny);
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.tracker-side label {
+  margin-top: 8px;
+  font-weight: 400;
+}
+
+.tracker-side .metrics {
+  grid-template-columns: 1fr 1fr;
+  gap: 10px 14px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+}
+
+@media (max-width: 1080px) {
+  .tracker-side {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 0 24px;
+  }
+
+  .tracker-side .metrics,
+  .tracker-side > p {
+    grid-column: 1 / -1;
+  }
+}
+
+/* A coloured dot in front of an overlay's name, matching its rings on the image. */
+.swatch {
+  flex: none;
+  width: 10px;
+  height: 10px;
+  border: 2px solid;
+  border-radius: 50%;
+}
+
+.swatch.gaia {
+  border-color: #9be3b4;
+}
+
+.swatch.wise {
+  border-color: #ff8ad8;
+  border-radius: 1px;
+}
+
+/* ---------- 9. Result tabs ---------- */
+
+.tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 2px;
+  margin: 0 0 var(--gap);
+  border-bottom: 1px solid var(--line);
+}
+
+.tabs button {
+  flex: none;
+  min-height: 40px;
+  margin-bottom: -1px;
+  padding: 8px 12px;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  border-radius: 0;
+  background: none;
+  color: var(--muted);
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.tabs button:hover {
+  color: var(--text);
+}
+
+.tabs button[aria-selected="true"] {
+  border-bottom-color: var(--orange);
+  color: var(--text);
+  font-weight: 650;
+}
+
+/* Separates the everyday tabs from the technical ones. */
+.tab-gap {
+  flex: none;
+  width: 1px;
+  margin: 10px 8px;
+  background: var(--line);
+}
+
+/* The blink comparator: one image that flips between the early and late stacks. */
+.blink {
+  position: relative;
+  max-width: 520px;
+  cursor: pointer;
+}
+
+.blink img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-small);
+  background: #000;
+  image-rendering: pixelated;
+}
+
+.blink-tag {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  padding: 2px 10px;
+  border-radius: var(--radius-small);
+  background: rgba(8, 24, 40, 0.85);
+  font-size: 0.9375rem;
+  font-weight: 600;
+}
+
+/* Plate view: show the stacked images as negatives too, to match the tracker. */
+.plate-view .blink img,
+.plate-view #cmp_early,
+.plate-view #cmp_late,
+.plate-view #det_row img,
+.plate-view #chem_band,
+.plate-view #chem_beside,
+.plate-view .gallery img {
+  filter: invert(1);
+}
+
+/* Early stack, late stack, difference. */
+.triptych {
+  display: grid;
+  /* auto-fill keeps a lone image at one column's width instead of stretching it across the panel */
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 14px;
+}
+
+.triptych img,
+.gallery img,
+.stamp img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: var(--radius-small);
+  background: #000;
+  image-rendering: pixelated;
+}
+
+.gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 12px;
+}
+
+.gallery img {
+  cursor: pointer;
+}
+
+/* Reference images from older surveys, with a ring marking the centre. */
+.refs {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 14px;
+}
+
+.ref {
+  position: relative;
+  display: grid;
+  place-items: center;
+  aspect-ratio: 1;
+  border-radius: var(--radius-small);
+  background: #000;
+  overflow: hidden;
+}
+
+.ref img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.ref::after {
+  content: "";
+  position: absolute;
+  width: 34px;
+  height: 34px;
+  border: 1.5px solid var(--orange);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+/* NEOSSat image with its date in the corner. */
+.stamp {
+  position: relative;
+  max-width: 420px;
+}
+
+.stamp-year {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  padding: 4px 10px;
+  border-radius: var(--radius-small);
+  background: rgba(8, 24, 40, 0.85);
+}
+
+.stamp-year b {
+  display: block;
+  font-size: 1.75rem;
+  font-weight: 700;
+  line-height: 1.1;
+}
+
+.stamp-year span {
+  color: var(--orange);
+  font-size: var(--size-tiny);
+}
+
+/* Links to other tools, grouped under small headings. */
+.xl h4 {
+  margin: 16px 0 6px;
+  color: var(--muted);
+  font-size: var(--size-tiny);
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.xl a {
+  font-weight: 600;
+}
+
+.xl p {
+  margin: 2px 0 10px;
+  color: var(--muted);
+  font-size: var(--size-small);
+}
+
+.credits {
+  max-width: 80ch;
+  padding-left: 18px;
+}
+
+.credits li {
+  margin: 4px 0;
+}
+
+/* ---------- 10. Sky map ---------- */
+
+.mapview {
+  padding-bottom: 48px;
+}
+
+.maphead {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.stage {
+  position: relative;
+  height: 64vh;
+  min-height: 420px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: #000;
+  overflow: hidden;
+}
+
+#aladin {
+  position: absolute;
+  inset: 0;
+}
+
+/* Transparent drawing layer over the map for the object's path. */
+#ov {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  background: transparent;
+  pointer-events: none;
+}
+
+/* The big year shown while an object moves. */
+#yearbox {
+  position: absolute;
+  top: 14px;
+  left: 14px;
+  padding: 8px 16px;
+  border-radius: var(--radius-small);
+  background: rgba(8, 24, 40, 0.85);
+  pointer-events: none;
+}
+
+#yr {
+  display: block;
+  color: #fff;
+  font-size: clamp(2.5rem, 6vw, 4.5rem);
+  font-weight: 700;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+#yrnote {
+  display: block;
+  margin-top: 4px;
+  color: var(--orange);
+  font-size: var(--size-small);
+}
+
+/* One button per featured object under the map. */
+.cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 10px;
+  margin: 14px 0;
+}
+
+.oc {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 12px 14px;
+  border-color: var(--line);
+  border-radius: var(--radius);
+  background: var(--panel);
+  text-align: left;
+}
+
+.oc span {
+  color: var(--muted);
+  font-size: var(--size-tiny);
+  font-weight: 400;
+}
+
+.oc[aria-pressed="true"] span {
+  color: inherit;
+}
+
+.explainer {
+  padding: 12px 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--panel);
+}
+
+/* ---------- 11. Welcome screen ---------- */
+
+/* A blueprint sheet: grid paper, the title left-aligned like a drawing. */
+#welcome {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: grid;
+  align-items: center;
+  padding: clamp(20px, 5vw, 64px);
+  background-color: var(--page);
+  background-image:
+    linear-gradient(rgba(168, 216, 255, 0.055) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(168, 216, 255, 0.055) 1px, transparent 1px);
+  background-size: 28px 28px;
+  overflow-y: auto;
+  transition:
+    opacity 0.5s ease,
+    visibility 0.5s;
+}
+
+#welcome.gone {
+  opacity: 0;
+  visibility: hidden;
+}
+
+.welcome-inner {
+  width: 100%;
+  max-width: 980px;
+  margin: 0 auto;
+}
+
+.start-logo {
+  display: block;
+  margin-bottom: 20px;
+}
+
+#welcome h1 {
+  font-size: clamp(2.125rem, 5.4vw, 3.75rem);
+  line-height: 1.05;
+  letter-spacing: -0.025em;
+}
+
+.start-lead {
+  margin: 18px 0 28px;
+  max-width: 62ch;
+  color: var(--muted);
+  font-size: 1.125rem;
+}
+
+/* The three ways in, side by side; stacked on phones. */
+.start-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 14px;
+  margin-bottom: 16px;
+}
+
+.start-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 20px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--panel);
+}
+
+.start-card h2 {
+  margin: 0;
+}
+
+.start-card .note {
+  margin: 0 0 4px;
+}
+
+.start-card .primary {
+  margin-top: auto;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #welcome,
+  .progress i,
+  button {
+    transition: none;
+  }
+}
+
+/* On phones the tabs stay on one line and scroll sideways instead of stacking four rows deep. */
+@media (max-width: 560px) {
+  .tabs {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: thin;
+  }
+
+  .tabs button {
+    margin-bottom: 0;
+  }
+}

@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Skyface Space Tracker logo">
+  <!-- A reticle around a star that has jumped: the faint dot is where it was, the bright star where it is now. -->
+  <circle cx="32" cy="32" r="26" fill="none" stroke="#ff6b35" stroke-width="4"/>
+  <g stroke="#ff6b35" stroke-width="4" stroke-linecap="round">
+    <path d="M32 2v9M32 53v9M2 32h9M53 32h9"/>
+  </g>
+  <path d="M22.5 41.5 34 30" fill="none" stroke="#a8d8ff" stroke-width="2.2" stroke-linecap="round" stroke-dasharray="1 5"/>
+  <circle cx="21" cy="43" r="3.4" fill="#a8d8ff" opacity=".5"/>
+  <path d="M41 9.500c1.100 8 4.400 11.300 12.500 12.500-8.100 1.200-11.400 4.500-12.500 12.500-1.100-8-4.400-11.300-12.500-12.500 8.100-1.200 11.400-4.500 12.500-12.500z" fill="#ffffff"/>
+</svg>

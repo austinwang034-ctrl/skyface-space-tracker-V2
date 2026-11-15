@@ -1,0 +1,915 @@
+<!doctype html>
+<!--
+  Skyface Space Tracker: page structure.
+
+  The page has three parts:
+    1. A start screen with three ways in: a star's name, coordinates, or the sky map.
+    2. "Track a patch": enter RA/Dec, get the object's identity and a tracker
+       (SPHEREx images of the patch played in time order). This is the main job.
+    3. "Sky map": the SPHEREx all-sky map with labelled objects to explore.
+
+  Styling lives in styles.css, behaviour in app.js. Elements that app.js fills in
+  or listens to are found by their id, so keep ids unchanged when editing.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Skyface Space Tracker</title>
+    <meta
+      name="description"
+      content="Watch any patch of sky change over time in NASA SPHEREx images, and spot what moves."
+    />
+    <meta name="author" content="The Skyface Space Tracker team" />
+    <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml" />
+
+    <!-- Typefaces are bundled in web/fonts (see styles.css), so the page needs no font service. -->
+    <link rel="stylesheet" href="/assets/styles.css" />
+
+    <!-- Charts: Plotly, bundled in web/vendor so charts work on any network. -->
+    <script src="/assets/vendor/plotly.min.js" charset="utf-8"></script>
+    <!-- Sky map: Aladin Lite from CDS Strasbourg. If that address is blocked, app.js falls back
+         to the copy bundled in web/vendor. -->
+    <script
+      src="https://aladin.cds.unistra.fr/AladinLite/api/v3/latest/aladin.js"
+      charset="utf-8"
+    ></script>
+    <script src="/assets/app.js" defer></script>
+  </head>
+
+  <body>
+    <!-- ============================ Start screen ============================ -->
+    <!-- Three ways in: a star's name, sky coordinates, or the sky map. -->
+    <div id="welcome" role="dialog" aria-labelledby="welcome-title">
+      <div class="welcome-inner">
+        <img class="start-logo" src="/assets/logo.svg" alt="" width="84" height="84" />
+        <p class="eyebrow">NASA Space Apps · SPHEREx</p>
+        <h1 id="welcome-title">Welcome to Skyface Space Tracker</h1>
+        <p class="start-lead">
+          In 1930 Clyde Tombaugh found Pluto by flipping between two photographs of the same patch
+          of sky and spotting the one dot that jumped. This is that instrument, rebuilt for NASA’s
+          SPHEREx telescope. Choose where to look.
+        </p>
+
+        <div class="start-grid">
+          <form class="start-card" id="start_name_form">
+            <h2>Enter a star name</h2>
+            <p class="note">Any name the SIMBAD catalogue knows.</p>
+            <label for="start_name" class="visually-hidden">Star name</label>
+            <input
+              type="text"
+              id="start_name"
+              placeholder="Barnard’s Star"
+              autocomplete="off"
+              autofocus
+            />
+            <button class="primary" type="submit">Track this star</button>
+          </form>
+
+          <form class="start-card" id="start_coords_form">
+            <h2>Enter coordinates</h2>
+            <p class="note">Right ascension and declination.</p>
+            <label for="start_ra" class="visually-hidden">Right ascension</label>
+            <input type="text" id="start_ra" placeholder="RA: 08h55m10.8s" autocomplete="off" />
+            <label for="start_dec" class="visually-hidden">Declination</label>
+            <input type="text" id="start_dec" placeholder="Dec: -07d14m42.5s" autocomplete="off" />
+            <button class="primary" type="submit">Track this patch</button>
+          </form>
+
+          <div class="start-card">
+            <h2>Look at the sky map</h2>
+            <p class="note">
+              The whole sky as SPHEREx sees it, with fast-moving and changing objects labelled.
+            </p>
+            <button class="primary" id="start_map" type="button">Open the sky map</button>
+          </div>
+        </div>
+
+        <p id="start_msg" class="err" role="alert" hidden></p>
+        <p class="note">
+          No internet, or just curious?
+          <button class="quiet" id="demo" type="button">Watch a simulated demo</button>
+        </p>
+      </div>
+    </div>
+
+    <!-- Lets keyboard and screen-reader users jump past the header. -->
+    <a class="skip-link" href="#main">Skip to the tracker</a>
+
+    <!-- ============================ Top bar ============================ -->
+    <header class="top">
+      <button class="brand" id="home" title="Back to the start screen">
+        <img src="/assets/logo.svg" alt="" width="38" height="38" />
+        <span>
+          <span class="brand-name">Skyface Space Tracker</span>
+          <span class="brand-tag">Watch any patch of sky change over time in SPHEREx images.</span>
+        </span>
+      </button>
+      <nav class="nav" aria-label="Views">
+        <button id="nav-coords" aria-pressed="true">Track a patch</button>
+        <button id="nav-map" aria-pressed="false">Sky map</button>
+      </nav>
+    </header>
+
+    <main id="main" tabindex="-1">
+      <!-- ============================ View 1: Track a patch ============================ -->
+      <div class="layout" id="view-coords" hidden>
+        <!-- The form. Only RA and Dec are needed; everything else has a sensible default. -->
+        <section class="panel" aria-labelledby="form-title">
+          <h2 id="form-title">Where should we look?</h2>
+
+          <label for="name">Star name</label>
+          <div class="inline-field">
+            <input type="text" id="name" placeholder="Barnard’s Star" autocomplete="off" />
+            <button id="name_go" type="button">Look up</button>
+          </div>
+          <p class="note">Fills in the coordinates below, or type them yourself.</p>
+
+          <label for="ra">Right ascension</label>
+          <input type="text" id="ra" placeholder="17h57m48.5s or 269.452" autocomplete="off" />
+
+          <label for="dec">Declination</label>
+          <input type="text" id="dec" placeholder="+04d41m36s or 4.6934" autocomplete="off" />
+
+          <label>Or try one of the test objects</label>
+          <div id="ex" class="chips"></div>
+
+          <button class="primary wide" id="go">Track this patch</button>
+
+          <details id="opts" class="options">
+            <summary>More options</summary>
+
+            <label for="epoch">Year the coordinates were measured</label>
+            <input type="text" id="epoch" value="2000" />
+            <p class="note">
+              SIMBAD lists positions for 2000, Gaia for 2016. This matters for fast-moving stars.
+            </p>
+
+            <label for="fov">Field of view: <span id="fovv">5</span>′</label>
+            <input type="range" id="fov" min="2" max="15" step="0.5" value="5" />
+            <p class="note">A wider field follows faster objects but takes longer to load.</p>
+
+            <label>Detector bands</label>
+            <div id="bands"></div>
+
+            <label for="maxf">Most images to use: <span id="maxv">100</span></label>
+            <input type="range" id="maxf" min="20" max="300" step="10" value="100" />
+
+            <label class="opt"
+              ><input type="checkbox" id="refine" checked /> Line images up using Gaia stars</label
+            >
+            <label class="opt"
+              ><input type="checkbox" id="refresh" /> Skip the one-hour cache</label
+            >
+            <label class="opt"
+              ><input type="checkbox" id="s_demo" /> Use made-up demo data (works offline)</label
+            >
+          </details>
+        </section>
+
+        <div class="results">
+          <!-- Shown when the patch was opened from the sky map, to move between featured objects. -->
+          <div id="objnav" class="panel navrow" hidden>
+            <button id="t_back">Back to sky map</button>
+            <span class="spacer"><b id="objnavname"></b></span>
+            <button id="t_prev">Previous object</button>
+            <button id="t_next">Next object</button>
+          </div>
+
+          <div id="status" class="panel" role="status" aria-live="polite" hidden>
+            <div id="smsg">Starting…</div>
+            <div class="progress"><i id="sbar"></i></div>
+          </div>
+          <div id="error" class="err" role="alert" hidden></div>
+
+          <div id="empty" class="panel empty">
+            <b>No patch chosen yet.</b>
+            <p class="note">
+              Enter a right ascension and declination, or pick a test object, then press “Track this
+              patch”.
+            </p>
+          </div>
+
+          <!-- The tracker and everything measured from it. -->
+          <div id="result" hidden>
+            <div id="synth" class="warn" hidden>
+              Made-up demo data. These are simulated images, not SPHEREx observations.
+            </div>
+            <div id="refnote" class="ok"></div>
+
+            <!-- The observer's log: a short written summary of what the tracker measured. -->
+            <section id="logbook" class="logbook" hidden aria-labelledby="log_title">
+              <h2 id="log_title">Observer’s log</h2>
+              <p id="log_verdict" class="log-verdict"></p>
+              <dl id="log_lines"></dl>
+            </section>
+            <div id="bandwarn" class="warn" hidden>
+              Several detector bands are mixed. Each band sees different wavelengths, so objects
+              will flicker. Choose one band for the cleanest tracker.
+            </div>
+
+            <div class="tabs" role="tablist" aria-label="Tracker results">
+              <button
+                role="tab"
+                id="tabbtn-movie"
+                aria-controls="tab-movie"
+                data-tab="movie"
+                aria-selected="true"
+              >
+                Tracker
+              </button>
+              <button
+                role="tab"
+                id="tabbtn-cmp"
+                aria-controls="tab-cmp"
+                data-tab="cmp"
+                aria-selected="false"
+              >
+                Compare epochs
+              </button>
+              <button
+                role="tab"
+                id="tabbtn-track"
+                aria-controls="tab-track"
+                data-tab="track"
+                aria-selected="false"
+              >
+                Motion
+              </button>
+              <button
+                role="tab"
+                id="tabbtn-spec"
+                aria-controls="tab-spec"
+                data-tab="spec"
+                aria-selected="false"
+              >
+                Spectrum
+              </button>
+              <button
+                role="tab"
+                id="tabbtn-chem"
+                aria-controls="tab-chem"
+                data-tab="chem"
+                aria-selected="false"
+              >
+                Wavelengths
+              </button>
+              <button
+                role="tab"
+                id="tabbtn-gal"
+                aria-controls="tab-gal"
+                data-tab="gal"
+                aria-selected="false"
+              >
+                Frames
+              </button>
+              <span class="tab-gap" aria-hidden="true"></span>
+              <button
+                role="tab"
+                id="tabbtn-dq"
+                aria-controls="tab-dq"
+                data-tab="dq"
+                aria-selected="false"
+              >
+                Data quality
+              </button>
+              <button
+                role="tab"
+                id="tabbtn-solve"
+                aria-controls="tab-solve"
+                data-tab="solve"
+                aria-selected="false"
+              >
+                Astrometry
+              </button>
+              <button
+                role="tab"
+                id="tabbtn-nbr"
+                aria-controls="tab-nbr"
+                data-tab="nbr"
+                aria-selected="false"
+              >
+                Neighbourhood
+              </button>
+              <button
+                role="tab"
+                id="tabbtn-more"
+                aria-controls="tab-more"
+                data-tab="more"
+                aria-selected="false"
+              >
+                Other telescopes
+              </button>
+            </div>
+
+            <!-- Tab: the tracker itself -->
+            <section id="tab-movie" class="panel" role="tabpanel" aria-labelledby="tabbtn-movie">
+              <div class="tracker">
+                <div>
+                  <canvas
+                    id="cv"
+                    width="760"
+                    height="760"
+                    tabindex="0"
+                    role="img"
+                    aria-label="Tracker image"
+                    aria-describedby="cv_help"
+                  ></canvas>
+                  <div class="transport">
+                    <button id="prev" class="icon" aria-label="Previous image">‹</button>
+                    <button id="play" class="primary">▶ Play</button>
+                    <button id="next" class="icon" aria-label="Next image">›</button>
+                    <input type="range" id="seek" min="0" value="0" aria-label="Image number" />
+                    <select id="fps" aria-label="Playback speed">
+                      <option value="2">2 per second</option>
+                      <option value="4" selected>4 per second</option>
+                      <option value="8">8 per second</option>
+                      <option value="15">15 per second</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div class="tracker-side">
+                  <fieldset>
+                    <legend>Show</legend>
+                    <label for="v_view" class="visually-hidden">What the image shows</label>
+                    <select id="v_view">
+                      <option value="image">The sky as observed</option>
+                      <option value="minus_static">Only what changed</option>
+                      <option value="minus_previous">Change since the image before</option>
+                    </select>
+                    <label for="v_window">Add neighbouring images together</label>
+                    <select id="v_window">
+                      <option value="1">Off: one image at a time</option>
+                      <option value="3">3 images</option>
+                      <option value="5">5 images</option>
+                      <option value="9">9 images</option>
+                    </select>
+                    <label for="v_bright">Brightness</label>
+                    <input type="range" id="v_bright" min="40" max="300" value="100" />
+                    <label for="v_contrast">Contrast</label>
+                    <input type="range" id="v_contrast" min="40" max="300" value="100" />
+                    <label class="opt"
+                      ><input type="checkbox" id="c_neg" /> Plate view (dark stars, light
+                      sky)</label
+                    >
+                    <label class="opt"
+                      ><input type="checkbox" id="c_each" /> Rescale brightness for each
+                      image</label
+                    >
+                    <label class="opt"
+                      ><input type="checkbox" id="c_smooth" checked /> Smooth pixels</label
+                    >
+                  </fieldset>
+
+                  <fieldset>
+                    <legend>Mark on the image</legend>
+                    <label class="opt"
+                      ><input type="checkbox" id="c_pred" checked /> Predicted position</label
+                    >
+                    <label class="opt"
+                      ><input type="checkbox" id="c_meas" /> Measured position</label
+                    >
+                    <label class="opt"
+                      ><input type="checkbox" id="c_gaia" />
+                      <span class="swatch gaia" aria-hidden="true"></span> Gaia stars</label
+                    >
+                    <label class="opt"
+                      ><input type="checkbox" id="c_wise" />
+                      <span class="swatch wise" aria-hidden="true"></span> WISE sources</label
+                    >
+                    <p class="note" id="ov_note" role="status"></p>
+                  </fieldset>
+
+                  <div class="metrics" id="metrics"></div>
+                  <p><a id="gif" href="#">Download the tracker as a GIF</a></p>
+                </div>
+              </div>
+              <p class="note" id="cv_help">
+                North is up, East is left. Click anywhere in the image to see the spectrum at that
+                spot. With the image selected, Space plays or pauses and the arrow keys step one
+                image at a time. Each exposure sees a different wavelength, so not every flicker is
+                a real change in brightness. “Only what changed” subtracts the typical sky, leaving
+                movers and variables: red is brighter than usual, blue is fainter. A dot with no
+                Gaia or WISE ring around it is in neither catalogue.
+              </p>
+              <!-- Read out by screen readers when the image is stepped by hand. -->
+              <p id="frame_text" class="visually-hidden" aria-live="polite"></p>
+              <p id="filter_note" class="ok" hidden></p>
+              <p id="tsrc" class="note"></p>
+              <details id="share" hidden>
+                <summary>Share or embed this view</summary>
+                <label for="share_url">Link</label>
+                <input type="text" id="share_url" readonly />
+                <label for="share_embed">Embed code</label>
+                <input type="text" id="share_embed" readonly />
+              </details>
+            </section>
+
+            <!-- Tab: add and subtract images -->
+            <section id="tab-cmp" class="panel" role="tabpanel" aria-labelledby="tabbtn-cmp" hidden>
+              <p class="note">
+                Adding exposures together gives a cleaner picture. Subtracting the early stack from
+                the late one makes anything that moved show up as a blue (earlier) and red (later)
+                pair.
+              </p>
+              <div class="controls">
+                <label class="opt">
+                  Split at
+                  <input type="range" id="cmp_split" min="10" max="90" value="50" />
+                  <span id="cmp_sv">50</span>%
+                </label>
+                <label class="opt"
+                  >Detector
+                  <select id="cmp_band"></select
+                ></label>
+              </div>
+              <!-- The blink comparator: one image that flips between the two stacks. -->
+              <div class="blink">
+                <img
+                  id="blink_img"
+                  alt="Early and late stacks, alternating. Press Enter to flip."
+                  tabindex="0"
+                  role="button"
+                />
+                <div class="blink-tag" id="blink_tag"></div>
+              </div>
+              <div class="controls">
+                <button id="blink_go" class="primary">Start blinking</button>
+                <label class="opt">
+                  Speed
+                  <select id="blink_speed">
+                    <option value="1000">Slow</option>
+                    <option value="550" selected>Normal</option>
+                    <option value="250">Fast</option>
+                  </select>
+                </label>
+                <span class="note"
+                  >Or click the image (or press Enter on it) to flip it by hand.</span
+                >
+              </div>
+
+              <div class="triptych">
+                <figure>
+                  <img id="cmp_early" alt="Early stack" />
+                  <figcaption>Early stack</figcaption>
+                </figure>
+                <figure>
+                  <img id="cmp_late" alt="Late stack" />
+                  <figcaption>Late stack</figcaption>
+                </figure>
+                <figure>
+                  <img id="cmp_diff" alt="Late minus early" />
+                  <figcaption>
+                    Late minus early (red: brighter later, blue: brighter earlier)
+                  </figcaption>
+                </figure>
+              </div>
+              <p class="note" id="cmp_info"></p>
+
+              <!-- All frames from each SPHEREx detector added together (filled in by app.js). -->
+              <h3>One stack per detector</h3>
+              <p class="note" id="det_note"></p>
+              <div class="triptych" id="det_row"></div>
+            </section>
+
+            <!-- Tab: measured position and brightness -->
+            <section
+              id="tab-track"
+              class="panel"
+              role="tabpanel"
+              aria-labelledby="tabbtn-track"
+              hidden
+            >
+              <div id="pmline" class="ok"></div>
+              <div id="plot1"></div>
+              <div id="plot2"></div>
+              <p class="note">
+                Brightness depends on wavelength. To judge real variability, compare points of
+                similar colour.
+              </p>
+              <a id="csv" href="#">Download the measurements (CSV)</a>
+            </section>
+
+            <!-- Tab: spectrum -->
+            <section
+              id="tab-spec"
+              class="panel"
+              role="tabpanel"
+              aria-labelledby="tabbtn-spec"
+              hidden
+            >
+              <p class="note">
+                Each SPHEREx exposure measures one wavelength at each position, so a spectrum builds
+                up from many exposures. Click anywhere in the tracker to get the spectrum there.
+              </p>
+              <div id="sp1"></div>
+              <div id="sp2"></div>
+              <div id="sp3"></div>
+              <p class="note" id="spnote"></p>
+            </section>
+
+            <!-- Tab: pick wavelengths to bring out a chemical signature or temperature -->
+            <section
+              id="tab-chem"
+              class="panel"
+              role="tabpanel"
+              aria-labelledby="tabbtn-chem"
+              hidden
+            >
+              <p class="note">
+                Molecules absorb or give off light at their own wavelengths. Pick one below and the
+                site adds together only the images taken at that wavelength, then compares them with
+                images taken just beside it. Whatever stands out in the difference is where that
+                molecule is at work.
+              </p>
+
+              <h3>Chemical signatures</h3>
+              <div
+                class="chips"
+                id="chem_molecules"
+                role="group"
+                aria-label="Chemical signatures"
+              ></div>
+              <h3>Temperature</h3>
+              <div class="chips" id="chem_temps" role="group" aria-label="Temperature ranges"></div>
+
+              <div class="controls">
+                <label class="opt">
+                  Or choose your own range, from
+                  <input
+                    type="text"
+                    id="chem_lo"
+                    class="short"
+                    inputmode="decimal"
+                    aria-label="Shortest wavelength in micrometres"
+                  />
+                  to
+                  <input
+                    type="text"
+                    id="chem_hi"
+                    class="short"
+                    inputmode="decimal"
+                    aria-label="Longest wavelength in micrometres"
+                  />
+                  µm
+                </label>
+                <button id="chem_go">Show this range</button>
+              </div>
+
+              <p id="chem_about"></p>
+              <div id="chem_msg" class="note" role="status"></div>
+
+              <div class="triptych" id="chem_images" hidden>
+                <figure>
+                  <img id="chem_band" alt="Images inside the chosen wavelengths, added together" />
+                  <figcaption id="chem_band_cap">Inside the band</figcaption>
+                </figure>
+                <figure>
+                  <img
+                    id="chem_beside"
+                    alt="Images just outside the chosen wavelengths, added together"
+                  />
+                  <figcaption id="chem_beside_cap">Just outside the band</figcaption>
+                </figure>
+                <figure>
+                  <img id="chem_diff" alt="Inside minus outside" />
+                  <figcaption>
+                    Inside minus outside (red: gives off light here, blue: absorbs here)
+                  </figcaption>
+                </figure>
+              </div>
+
+              <p class="note">
+                Reading the difference: a single red or blue spot is chemistry. A red and blue pair
+                side by side is an object that moved between the two sets of images, because they
+                were taken on different dates.
+              </p>
+
+              <div class="controls">
+                <button id="chem_play" disabled>Play only these wavelengths in the tracker</button>
+                <button id="chem_all" disabled>Play all wavelengths again</button>
+              </div>
+
+              <h3>How warm is it?</h3>
+              <p id="chem_temp_text" class="note"></p>
+            </section>
+
+            <!-- Tab: every frame as a thumbnail, plus older surveys for reference -->
+            <section id="tab-gal" class="panel" role="tabpanel" aria-labelledby="tabbtn-gal" hidden>
+              <p class="note">
+                SPHEREx exposures of this patch, oldest first. Click one to open it in the tracker.
+              </p>
+              <div class="gallery" id="gal"></div>
+              <div id="refimgs" hidden></div>
+            </section>
+
+            <!-- Tab: flags and metadata per exposure -->
+            <section id="tab-dq" class="panel" role="tabpanel" aria-labelledby="tabbtn-dq" hidden>
+              <p class="note" id="dq_legend"></p>
+              <div
+                class="scroll tall"
+                id="dq_table"
+                tabindex="0"
+                role="region"
+                aria-label="Data quality table"
+              ></div>
+            </section>
+
+            <!-- Tab: astrometry against Gaia -->
+            <section
+              id="tab-solve"
+              class="panel"
+              role="tabpanel"
+              aria-labelledby="tabbtn-solve"
+              hidden
+            >
+              <p class="note">
+                Astrometry is the measuring of positions. Each image is checked against Gaia stars
+                moved to the exposure date, and pointing errors are removed. With the known stars
+                pinned down, every other source in the image gets coordinates too. Sources with no
+                Gaia match are listed as candidates.
+              </p>
+              <div class="metrics" id="smetrics"></div>
+              <div
+                class="scroll"
+                id="stable"
+                tabindex="0"
+                role="region"
+                aria-label="Plate-solving results"
+              ></div>
+              <label for="cand">Inspect image <span id="candv">0</span></label>
+              <input type="range" id="cand" min="0" value="0" />
+              <div
+                id="ctable"
+                class="scroll"
+                tabindex="0"
+                role="region"
+                aria-label="Sources with no Gaia match"
+              ></div>
+
+              <h3>Is it a known asteroid or comet?</h3>
+              <p class="note">
+                NASA JPL keeps the orbits of every catalogued asteroid and comet. This asks which of
+                them were near the patch when the image now showing in the tracker was taken.
+              </p>
+              <div class="controls">
+                <button id="sb_go">Check NASA JPL for known asteroids and comets</button>
+              </div>
+              <div id="sb_msg" class="note"></div>
+              <div
+                id="sb_table"
+                class="scroll"
+                tabindex="0"
+                role="region"
+                aria-label="Known asteroids and comets"
+              ></div>
+            </section>
+
+            <!-- Tab: neighbouring stars and their motion -->
+            <section id="tab-nbr" class="panel" role="tabpanel" aria-labelledby="tabbtn-nbr" hidden>
+              <p class="note">
+                Gaia stars around the patch, moved through time. Pale blue lines show where fast
+                movers travel; the orange path is the selected target.
+              </p>
+              <div class="controls">
+                <label class="opt"
+                  >Radius <input type="text" id="n_rad" class="short" value="8" />′</label
+                >
+                <label class="opt"
+                  >Faintest G <input type="text" id="n_mag" class="short" value="17"
+                /></label>
+                <label class="opt">
+                  Years <input type="text" id="n_y0" class="short" value="2010" /> to
+                  <input type="text" id="n_y1" class="short" value="2040" />
+                </label>
+                <button id="n_go">Map the neighbourhood</button>
+              </div>
+              <div id="nplot"></div>
+              <div
+                id="ntable"
+                class="scroll"
+                tabindex="0"
+                role="region"
+                aria-label="Neighbouring stars"
+              ></div>
+              <p class="note">
+                Gaia does not contain very cold brown dwarfs such as WISE 0855, so they will not
+                appear as dots.
+              </p>
+            </section>
+
+            <!-- Tab: NEOSSat images and links to other tools -->
+            <section
+              id="tab-more"
+              class="panel"
+              role="tabpanel"
+              aria-labelledby="tabbtn-more"
+              hidden
+            >
+              <h3>NEOSSat: a second telescope on the same patch</h3>
+              <p class="note">
+                NEOSSat is the Canadian Space Agency’s 15 cm space telescope. It has photographed
+                chosen targets in visible light since 2013, so where it has looked it gives a much
+                longer time span than SPHEREx.
+              </p>
+              <div class="controls">
+                <button id="ns_go">Search NEOSSat for this patch</button>
+                <label class="opt"
+                  >Search radius <input type="text" id="ns_rad" class="short" value="3" />′</label
+                >
+              </div>
+              <div id="ns_msg" class="note"></div>
+              <div id="ns_player" hidden>
+                <div class="stamp">
+                  <img id="ns_img" alt="NEOSSat image of the patch" />
+                  <div class="stamp-year"><b id="ns_year"></b><span id="ns_date"></span></div>
+                </div>
+                <div class="controls">
+                  <button id="ns_play">▶ Play</button>
+                  <input
+                    type="range"
+                    id="ns_seek"
+                    min="0"
+                    value="0"
+                    aria-label="NEOSSat image number"
+                  />
+                </div>
+                <p class="note">
+                  Oldest first. NEOSSat images are not rotated North-up and its pointing can be off
+                  by a few pixels, so stars may jump between images.
+                </p>
+              </div>
+              <div
+                id="ns_table"
+                class="scroll"
+                tabindex="0"
+                role="region"
+                aria-label="NEOSSat images"
+              ></div>
+
+              <h3>Check this patch in other tools</h3>
+              <div id="xlinks"></div>
+
+              <h3>Data credits</h3>
+              <ul id="xcredits" class="note credits"></ul>
+            </section>
+          </div>
+
+          <!-- Who is at these coordinates (filled in by app.js). Shown under the tracker. -->
+          <section id="idcard" class="panel" hidden></section>
+        </div>
+      </div>
+
+      <!-- ============================ View 2: Sky map ============================ -->
+      <section id="view-map" class="mapview" hidden>
+        <div class="maphead">
+          <div class="chips" id="layers" role="group" aria-label="Map layer"></div>
+          <div class="chips" id="overlays" role="group" aria-label="Catalogue overlays">
+            <button data-ov="gaia" aria-pressed="false">Show Gaia stars</button>
+            <button data-ov="wise" aria-pressed="false">Show WISE sources</button>
+          </div>
+        </div>
+        <div id="maperr" class="err" role="alert" hidden></div>
+
+        <div class="stage">
+          <div id="aladin"></div>
+          <canvas id="ov"></canvas>
+          <div id="yearbox" hidden><b id="yr">2000</b><span id="yrnote"></span></div>
+        </div>
+        <p class="note" id="laynote"></p>
+        <p class="note" id="maphint">
+          Click a labelled object to zoom in. Orange labels are the test objects, white are bright
+          stars, and cyan are the planets today.
+        </p>
+
+        <div class="cards" id="cards"></div>
+
+        <details class="explainer">
+          <summary>Why do things in the sky move, and how can you help find new ones?</summary>
+          <p>
+            Asteroids and comets orbit the Sun. Nearby stars drift across the sky as they orbit the
+            Galaxy (their <i>proper motion</i>). Because Earth orbits the Sun, nearby objects also
+            shift back and forth during the year (<i>parallax</i>), which tells us how far away they
+            are. Pluto was discovered when an astronomer compared two photographs and noticed that
+            one point of light had moved.
+          </p>
+          <p>
+            Comparing images taken at different times is still how new neighbours are found.
+            Volunteers have discovered asteroids, comets, stars and brown dwarfs through projects
+            like
+            <a href="https://www.backyardworlds.org" target="_blank" rel="noopener"
+              >backyardworlds.org</a
+            >. Track any patch of sky, open <b>Compare epochs</b>, and look for a blue-and-red pair:
+            that is something that moved.
+          </p>
+        </details>
+
+        <!-- Details for the object picked on the map (filled in by app.js). -->
+        <section id="objpanel" class="panel" hidden>
+          <div class="navrow">
+            <button id="o_back">Back to sky map</button>
+            <span class="spacer"></span>
+            <button id="o_prev">Previous object</button>
+            <button id="o_next">Next object</button>
+          </div>
+          <div class="object-name" id="o_name"></div>
+          <div class="note" id="o_cat"></div>
+          <p id="o_head"></p>
+          <div class="controls">
+            <button id="o_play">❚❚ Pause</button>
+            <input type="range" id="o_year" min="2000" max="2040" step="0.05" aria-label="Year" />
+            <label class="opt">
+              Speed
+              <select id="o_speed">
+                <option value="1">Slow</option>
+                <option value="2.5" selected>Normal</option>
+                <option value="6">Fast</option>
+              </select>
+            </label>
+            <button id="o_track" class="primary">Track it in SPHEREx images</button>
+          </div>
+          <p class="note">
+            The orange path shows where the object travels from 2000 to 2040, worked out from its
+            measured motion.
+          </p>
+          <div class="tabs">
+            <button data-ot="over" aria-selected="true">Overview</button>
+            <button data-ot="spec" aria-selected="false">Spectrum</button>
+          </div>
+          <div id="o_over"></div>
+          <div id="o_spec" hidden>
+            <div id="op1"></div>
+            <div id="op2"></div>
+            <div id="op3"></div>
+            <p class="note" id="opnote"></p>
+          </div>
+        </section>
+      </section>
+    </main>
+
+    <footer>
+      <p class="copyright">
+        © 2026 The Skyface Space Tracker team. Free software under the
+        <a href="/license">GNU Affero General Public License v3</a>: you may reuse it, but copies
+        and modified versions must keep this notice and publish their source code.
+      </p>
+      <details class="about-data">
+        <summary>Where the data comes from, and who can use this site</summary>
+        <p>
+          Every image in the tracker is a NASA SPHEREx observation, fetched live from NASA’s public
+          archive at the moment you ask. The site is free, needs no account, and stores nothing
+          about you.
+        </p>
+        <table>
+          <thead>
+            <tr>
+              <th>What you see</th>
+              <th>Source</th>
+              <th>NASA data?</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Tracker images, spectra, flags, all-sky map</td>
+              <td>
+                SPHEREx mission (NASA / JPL-Caltech), from the NASA/IPAC Infrared Science Archive
+              </td>
+              <td>Yes</td>
+            </tr>
+            <tr>
+              <td>Known asteroids and comets</td>
+              <td>NASA JPL Small-Body Identification service</td>
+              <td>Yes</td>
+            </tr>
+            <tr>
+              <td>Reference images (2MASS, AllWISE) and the WiseView link</td>
+              <td>NASA surveys, served by CDS Strasbourg and the Backyard Worlds team</td>
+              <td>Yes</td>
+            </tr>
+            <tr>
+              <td>Star positions and motions used to line the images up</td>
+              <td>Gaia (European Space Agency), with a copy at NASA’s MAST archive</td>
+              <td>Partner agency</td>
+            </tr>
+            <tr>
+              <td>Object names and types</td>
+              <td>SIMBAD (CDS Strasbourg, France)</td>
+              <td>No</td>
+            </tr>
+            <tr>
+              <td>NEOSSat images</td>
+              <td>Canadian Space Agency, archived at CADC</td>
+              <td>Partner agency</td>
+            </tr>
+          </tbody>
+        </table>
+        <p>
+          This site uses data from SPHEREx, a joint project of the Jet Propulsion Laboratory and the
+          California Institute of Technology, funded by NASA. It is an independent student project,
+          not an official NASA product.
+        </p>
+      </details>
+    </footer>
+  </body>
+</html>
