@@ -1,0 +1,12 @@
+# Render Blueprint for the FREE plan: New > Blueprint > pick your GitHub repo.
+# Free means 512 MB of memory and a tenth of a CPU core, and the site sleeps after 15 minutes
+# without visitors (the next visit wakes it in about a minute).
+services:
+  - type: web
+    name: skyface-space-tracker
+    runtime: docker
+    plan: free
+    healthCheckPath: /api/health
+    envVars:
+      - key: SKYFACE_MAX_FRAMES # fewer images per tracker, so requests finish on the small free CPU
+        value: "60"

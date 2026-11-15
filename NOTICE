@@ -1,0 +1,15 @@
+Skyface Space Tracker
+Copyright (C) 2026 The Skyface Space Tracker team
+
+This program is free software: you can redistribute it and/or modify it under the terms of the
+GNU Affero General Public License as published by the Free Software Foundation, either version 3
+of the License, or (at your option) any later version. It comes with NO WARRANTY. See LICENSE.
+
+In plain words: you may study, reuse and adapt this project, but any copy or modified version,
+including one that is only run as a website, must keep this notice, credit the original authors,
+and make its complete source code available under the same licence.
+
+Bundled third-party work, each under its own licence:
+  - Aladin Lite (CDS, Strasbourg): GPL-3.0            web/vendor/aladin.js
+  - Plotly.js (Plotly, Inc.): MIT                      web/vendor/plotly.min.js
+  - Atkinson Hyperlegible Next (Braille Institute): SIL Open Font License 1.1   web/fonts/

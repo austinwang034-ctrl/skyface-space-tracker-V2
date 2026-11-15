@@ -1,0 +1,13 @@
+numpy
+scipy
+pandas
+astropy>=6.0
+astroquery>=0.4.8
+pyvo
+reproject>=0.13
+photutils>=1.12
+plotly
+pillow
+requests
+fastapi
+uvicorn[standard]
